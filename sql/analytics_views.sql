@@ -168,22 +168,21 @@ WITH customer_rfm AS (
 rfm_scores AS (
     SELECT
         *,
-
+        
         NTILE(5) OVER (
-            ORDER BY recency DESC
+            ORDER BY recency DESC, customer_id ASC
         ) AS r_score,
 
         NTILE(5) OVER (
-            ORDER BY frequency
+            ORDER BY frequency ASC, customer_id ASC
         ) AS f_score,
 
         NTILE(5) OVER (
-            ORDER BY monetary
+            ORDER BY monetary ASC, customer_id ASC
         ) AS m_score
 
     FROM customer_rfm
 )
-
 SELECT
     customer_id,
     country,
