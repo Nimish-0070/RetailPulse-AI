@@ -1,0 +1,42 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# PostgreSQL / database files
+*.sqlitedb
+*.sqlite
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Raw datasets
+data/raw/
+
+# Processed datasets
+data/processed/*.csv
