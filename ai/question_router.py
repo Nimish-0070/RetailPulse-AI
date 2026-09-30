@@ -188,6 +188,9 @@ def direct_sql_answer(question):
 
     if (
         "total orders" in question_lower
+        or "how many orders" in question_lower
+        or "number of orders" in question_lower
+        or "order count" in question_lower
         or question_lower == "orders"
     ):
 
