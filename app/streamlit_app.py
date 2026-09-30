@@ -62,6 +62,15 @@ def chart_config():
     }
 
 
+def render_ai_markdown(content):
+    """Render AI-generated Markdown without treating $ as LaTeX math."""
+    if content is None:
+        return
+
+    safe_content = str(content).replace("$", r"\$")
+    st.markdown(safe_content)
+
+
 # ============================================================
 # DATA LOADING
 # ============================================================
@@ -166,7 +175,7 @@ def show_monthly_revenue_chart():
 
     st.plotly_chart(
         fig,
-        use_container_width=True,
+        width="stretch",
         config=chart_config(),
     )
 
@@ -268,7 +277,7 @@ def show_top_products_chart():
 
     st.plotly_chart(
         fig,
-        use_container_width=True,
+        width="stretch",
         config=chart_config(),
     )
 
@@ -362,7 +371,7 @@ def show_country_revenue_chart():
 
     st.plotly_chart(
         fig,
-        use_container_width=True,
+        width="stretch",
         config=chart_config(),
     )
 
@@ -460,7 +469,7 @@ def show_customer_segments_chart():
 
     st.plotly_chart(
         fig,
-        use_container_width=True,
+        width="stretch",
         config=chart_config(),
     )
 
@@ -740,7 +749,7 @@ with assistant_tab:
 
             if st.button(
                 question_text,
-                use_container_width=True,
+                width="stretch",
                 key=f"suggested_{i}",
             ):
 
@@ -791,7 +800,6 @@ with assistant_tab:
 
             with st.chat_message(
                 "user",
-                avatar="👤",
             ):
 
                 st.markdown(
@@ -812,7 +820,7 @@ with assistant_tab:
                     unsafe_allow_html=True,
                 )
 
-                st.markdown(
+                render_ai_markdown(
                     message["content"]
                 )
 
@@ -847,7 +855,7 @@ with assistant_tab:
 
         with st.chat_message(
             "user",
-            avatar="👤",
+
         ):
 
             st.markdown(question)
@@ -878,7 +886,7 @@ with assistant_tab:
                     )
                 )
 
-            st.markdown(answer)
+            render_ai_markdown(answer)
 
             if visualization_type:
 
@@ -912,6 +920,11 @@ with dashboard_tab:
     st.caption(
         "A verified overview of retail sales, "
         "customers, products and geographic performance."
+    )
+
+    st.info(
+        "Data coverage: December 2009 – December 9, 2010 | "
+        "Source: PostgreSQL verified retail data"
     )
 
     # --------------------------------------------------------
@@ -1046,9 +1059,14 @@ with dashboard_tab:
                 "### 🤖 AI Executive Summary"
             )
 
+            st.caption(
+                "Convert verified KPIs, product, customer and geographic "
+                "data into a concise management-level summary."
+            )
+
             if st.button(
                 "✨ Generate Executive Summary",
-                use_container_width=True,
+                width="stretch",
                 key="generate_executive_summary",
             ):
 
@@ -1075,7 +1093,7 @@ with dashboard_tab:
                     unsafe_allow_html=True,
                 )
 
-                st.markdown(
+                render_ai_markdown(
                     st.session_state[
                         "executive_summary"
                     ]
@@ -1120,7 +1138,7 @@ with st.sidebar:
         """
         ### Intelligence Stack
 
-        🐍 **Python**
+        ðŸ **Python**
 
         🐘 **PostgreSQL**
 
@@ -1139,17 +1157,17 @@ with st.sidebar:
     st.divider()
 
     st.markdown(
-        "### 📁 Data Coverage"
+        "### 📊Data Coverage"
     )
 
     st.caption(
-        "December 2009 – December 9, 2010"
+        "December 2009 â€“ December 9, 2010"
     )
 
     st.divider()
 
     st.markdown(
-        "### 🧠 AI Architecture"
+        "### ðŸ§  AI Architecture"
     )
 
     st.caption(
@@ -1162,6 +1180,10 @@ with st.sidebar:
 
     st.caption(
         "Visual questions → PostgreSQL + Plotly"
+    )
+
+    st.caption(
+        "AI summaries → CrewAI + Gemini"
     )
 
     st.divider()
