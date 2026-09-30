@@ -195,12 +195,17 @@ def show_top_products_chart():
 
     for row in data:
 
-        products.append(
+        product_name = str(
             row.get(
                 "description",
                 "Unknown Product",
             )
-        )
+        ).strip()
+
+        if not product_name:
+            product_name = "Unknown Product"
+
+        products.append(product_name)
 
         revenues.append(
             float(row["revenue"])
@@ -209,7 +214,7 @@ def show_top_products_chart():
         units.append(
             int(
                 row.get(
-                    "units_sold",
+                    "total_units",
                     0,
                 )
             )

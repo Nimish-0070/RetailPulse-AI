@@ -39,10 +39,17 @@ SIMPLE_PATTERNS = [
     "top products",
     "best products",
     "highest revenue products",
+    "which products generate the most revenue",
+    "which products generate most revenue",
+    "products generate the most revenue",
 
     "top countries",
     "countries",
     "highest revenue countries",
+    "which country generates the most revenue",
+    "which country generates most revenue",
+    "country generates the most revenue",
+    "country generates most revenue",
 
     "customer segments",
     "segments",
@@ -50,6 +57,8 @@ SIMPLE_PATTERNS = [
     "at risk customers",
     "customers at risk",
 ]
+
+
 # ============================================================
 # DETERMINE QUESTION TYPE
 # ============================================================
@@ -107,9 +116,16 @@ def is_simple_question(question):
         "top products",
         "best products",
         "highest revenue products",
+        "which products generate the most revenue",
+        "which products generate most revenue",
+        "products generate the most revenue",
 
         "top countries",
         "highest revenue countries",
+        "which country generates the most revenue",
+        "which country generates most revenue",
+        "country generates the most revenue",
+        "country generates most revenue",
 
         "customer segments",
         "segments",
@@ -124,6 +140,7 @@ def is_simple_question(question):
         pattern in question_lower
         for pattern in simple_patterns
     )
+
 
 # ============================================================
 # FORMAT CURRENCY
@@ -221,9 +238,19 @@ def direct_sql_answer(question):
     if (
         "top products" in question_lower
         or "best products" in question_lower
+        or "highest revenue products" in question_lower
+        or "which products generate the most revenue" in question_lower
+        or "which products generate most revenue" in question_lower
+        or "products generate the most revenue" in question_lower
     ):
 
         products = get_top_products(5)
+
+        if not products:
+            return (
+                "**FACT:** No product performance data "
+                "is currently available."
+            )
 
         lines = [
             "**FACT:** Top products by revenue:\n"
@@ -231,8 +258,18 @@ def direct_sql_answer(question):
 
         for index, product in enumerate(products, start=1):
 
+            # Clean trailing/leading whitespace from
+            # database product descriptions before
+            # inserting them into Markdown.
+            description = str(
+                product.get("description", "")
+            ).strip()
+
+            if not description:
+                description = "Unnamed Product"
+
             lines.append(
-                f"{index}. **{product['description']}** — "
+                f"{index}. **{description}** — "
                 f"{format_currency(product['revenue'])}"
             )
 
@@ -245,9 +282,20 @@ def direct_sql_answer(question):
     if (
         "top countries" in question_lower
         or question_lower == "countries"
+        or "highest revenue countries" in question_lower
+        or "which country generates the most revenue" in question_lower
+        or "which country generates most revenue" in question_lower
+        or "country generates the most revenue" in question_lower
+        or "country generates most revenue" in question_lower
     ):
 
         countries = get_country_revenue(5)
+
+        if not countries:
+            return (
+                "**FACT:** No country performance data "
+                "is currently available."
+            )
 
         lines = [
             "**FACT:** Top countries by revenue:\n"
@@ -258,8 +306,15 @@ def direct_sql_answer(question):
             start=1,
         ):
 
+            country_name = str(
+                country.get("country", "")
+            ).strip()
+
+            if not country_name:
+                country_name = "Unknown Country"
+
             lines.append(
-                f"{index}. **{country['country']}** — "
+                f"{index}. **{country_name}** — "
                 f"{format_currency(country['revenue'])}"
             )
 
@@ -276,14 +331,27 @@ def direct_sql_answer(question):
 
         segments = get_customer_segments()
 
+        if not segments:
+            return (
+                "**FACT:** No customer segment data "
+                "is currently available."
+            )
+
         lines = [
             "**FACT:** Customer segment summary:\n"
         ]
 
         for segment in segments:
 
+            segment_name = str(
+                segment.get("customer_segment", "")
+            ).strip()
+
+            if not segment_name:
+                segment_name = "Unknown Segment"
+
             lines.append(
-                f"- **{segment['customer_segment']}**: "
+                f"- **{segment_name}**: "
                 f"{int(segment['customer_count']):,} customers"
             )
 
@@ -296,6 +364,12 @@ def direct_sql_answer(question):
     if "champions" in question_lower:
 
         champions = get_champions(5)
+
+        if not champions:
+            return (
+                "**FACT:** No Champion customer data "
+                "is currently available."
+            )
 
         lines = [
             "**FACT:** Top Champion customers:\n"
@@ -322,6 +396,12 @@ def direct_sql_answer(question):
 
         customers = get_at_risk_customers(5)
 
+        if not customers:
+            return (
+                "**FACT:** No at-risk customer data "
+                "is currently available."
+            )
+
         lines = [
             "**FACT:** Top at-risk customers:\n"
         ]
@@ -338,9 +418,15 @@ def direct_sql_answer(question):
 
     return None
 
+
+# ============================================================
+# VISUALIZATION DETECTION
+# ============================================================
+
 def get_visualization_type(question):
     """
     Detect whether the user is asking for a visual representation.
+
     Returns:
         'monthly_revenue'
         'top_products'
@@ -370,6 +456,10 @@ def get_visualization_type(question):
     if not wants_visual:
         return None
 
+    # --------------------------------------------------------
+    # MONTHLY REVENUE
+    # --------------------------------------------------------
+
     if any(
         word in question_lower
         for word in [
@@ -381,6 +471,10 @@ def get_visualization_type(question):
     ):
         return "monthly_revenue"
 
+    # --------------------------------------------------------
+    # PRODUCTS
+    # --------------------------------------------------------
+
     if any(
         word in question_lower
         for word in [
@@ -388,9 +482,15 @@ def get_visualization_type(question):
             "best products",
             "product revenue",
             "products by revenue",
+            "highest revenue products",
+            "which products generate the most revenue",
         ]
     ):
         return "top_products"
+
+    # --------------------------------------------------------
+    # COUNTRIES
+    # --------------------------------------------------------
 
     if any(
         word in question_lower
@@ -399,9 +499,18 @@ def get_visualization_type(question):
             "revenue by country",
             "sales by country",
             "country performance",
+            "highest revenue countries",
+            "which country generates the most revenue",
+            "which country generates most revenue",
+            "country generates the most revenue",
+            "country generates most revenue",
         ]
     ):
         return "country_revenue"
+
+    # --------------------------------------------------------
+    # CUSTOMER SEGMENTS
+    # --------------------------------------------------------
 
     if any(
         word in question_lower
@@ -415,6 +524,8 @@ def get_visualization_type(question):
         return "customer_segments"
 
     return None
+
+
 # ============================================================
 # MAIN ROUTER
 # ============================================================
@@ -425,10 +536,12 @@ def route_question(question):
 
     1. Direct PostgreSQL
     2. CrewAI + Gemini
+
+    The router also provides a controlled fallback message
+    when either data or AI services fail.
     """
 
     if not question or not question.strip():
-
         return "Please enter a business question."
 
     question = question.strip()
@@ -446,19 +559,53 @@ def route_question(question):
             if result is not None:
                 return result
 
-        except Exception as error:
+            return (
+                "I couldn't find a direct database answer "
+                "for that question."
+            )
+
+        except Exception:
 
             return (
                 "I couldn't retrieve the requested data "
                 "from PostgreSQL.\n\n"
-                f"Database error: {error}"
+                "Please check that the database is running "
+                "and try again."
             )
 
     # --------------------------------------------------------
     # ANALYTICAL QUESTION → CREWAI + GEMINI
     # --------------------------------------------------------
 
-    return answer_question(question)
+    try:
+
+        result = answer_question(question)
+
+        # Protect the application from empty AI responses.
+        if result is None:
+            return (
+                "I couldn't generate an AI analysis for "
+                "that question."
+            )
+
+        if not isinstance(result, str):
+            result = str(result)
+
+        if not result.strip():
+            return (
+                "I couldn't generate an AI analysis for "
+                "that question."
+            )
+
+        return result
+
+    except Exception:
+
+        return (
+            "The AI analysis service is temporarily unavailable.\n\n"
+            "Please try again in a moment. "
+            "Your database and project data are not affected."
+        )
 
 
 # ============================================================
@@ -471,6 +618,7 @@ if __name__ == "__main__":
         "What is our total revenue?",
         "How many orders do we have?",
         "Which products generate the most revenue?",
+        "Which country generates the most revenue?",
         "Why did revenue change during the year?",
     ]
 
@@ -484,11 +632,8 @@ if __name__ == "__main__":
         print(question)
 
         if is_simple_question(question):
-
             print("ROUTE: DIRECT POSTGRESQL")
-
         else:
-
             print("ROUTE: CREWAI + GEMINI")
 
         print("-" * 70)
